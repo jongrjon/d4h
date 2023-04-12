@@ -23,9 +23,25 @@ class Person:
         self.id = uid
         self.hrs = 0
         self.incidents = 0
+        self.h= False
 
     def __repr__(self):
-        return str(self.ref)+" "+str(self.name)+" "+str(round(self.hrs, 2))+" "+str(self.incidents)
+        if self.h:
+            return str(self.ref)+", "+str(self.name)+", "+str(round(self.hrs, 2))+", "+str(self.incidents)+", HEIDURSFELAGI"
+        else:
+            return str(self.ref)+", "+str(self.name)+", "+str(round(self.hrs, 2))+", "+str(self.incidents)
+    
+    def honorary(self):
+        self.h = True
+
+conn.request("GET", "/v2/team/qualifications/14569/qualified-members", payload, headers)
+honors = conn.getresponse()
+honors_data = honors.read()
+honors_jason = json.loads(honors_data)
+h_list = []
+for h in honors_jason["data"]:
+    h_list.append(h["id"])
+    
 
 for s in status:
     conn.request("GET", "/v2/team/members?status="+s, payload, headers)
@@ -44,9 +60,12 @@ for s in status:
                 if u["activity"]["type"] == "incident":
                     user.incidents += 1
                 user.hrs += u["duration"]/60
-            if user.hrs >MIN_HRS or user.incidents > MIN_INC:
+                if user.id in h_list:
+                    user.honorary()
+            if user.hrs >MIN_HRS or user.incidents > MIN_INC or user.h:
                 users.append(user)
 
 users.sort(key=lambda u: u.name)
 for u in users:
     print(u)
+
